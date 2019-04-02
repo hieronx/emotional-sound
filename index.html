@@ -65,6 +65,7 @@
 
     var $body = document.querySelector('body');
     var emotion_labels = ["angry", "disgust", "fear", "happy", "sad", "surprise", "neutral"];
+    var emotion_mood_specification = [0.0, 0.2, 0.4, 1.0, 0.5, 0.8, 0.6];
     var emotion_colors = ["#ff0000", "#00a800", "#ff4fc1", "#ffe100", "#306eff", "#ff9d00", "#7c7c7c"];
     var offset_x = 15;
     var offset_y = 40;
@@ -126,6 +127,8 @@
             const videoHeight = videoCompStyle.height.replace('px', '')
             context.drawImage(video, 0, 0, videoWidth, videoHeight)
 
+            let totalMood = 0.0;
+
             if (faces.length) {
                 let ctx = context;
 
@@ -147,6 +150,8 @@
                     let index = z.argMax(1).dataSync()[0]
                     let label = emotion_labels[index];
 
+                    totalMood += emotion_mood_specification[index];
+
                     ctx.strokeStyle = emotion_colors[index];
                     ctx.rect(s_x, s_y, s_w, s_h);
                     ctx.stroke();
@@ -166,7 +171,12 @@
             var status = document.getElementById('status');
             status.innerHTML = faces.length + " people detected";
 
-            Pd.send('frequency', [faces.length * 400])
+            if (faces.length > 0) {
+                const mood = totalMood / faces.length;
+
+                Pd.send('crowd_size', [Math.min(faces.length, 10) / 10])
+                Pd.send('mood', [mood])
+            }
         }
     }
 
@@ -230,7 +240,7 @@
     function loadAudio() {
         console.log('retrieving patch')
         let patch = null
-        fetch('http://localhost:8000/osc.pd').then((response) => {
+        fetch('http://localhost:5000/main.pd').then((response) => {
             return response.text()
         }).then((patchStr) => {
             console.log('loading patch', patchStr)

@@ -1,6 +1,0 @@
-#N canvas 626 325 682 442 10;
-#X obj 281 291 dac~ 1 2;
-#X obj 269 219 osc~ 400;
-#X obj 258 165 receive frequency;
-#X connect 1 0 0 0;
-#X connect 2 0 1 0;

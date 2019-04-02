@@ -1,0 +1,52 @@
+#N canvas 145 59 1165 698 10;
+#X obj 241 121 hsl 128 15 0 1 0 0 empty empty empty -2 -8 0 10 -262144
+-1 -1 0 1;
+#X text 287 97 MOOD;
+#X obj 35 121 hsl 128 15 0 1 0 0 empty empty empty -2 -8 0 10 -262144
+-1 -1 0 1;
+#X text 64 96 CROWD SIZE;
+#X obj 433 120 hsl 128 15 0 1 0 0 empty empty empty -2 -8 0 10 -262144
+-1 -1 0 1;
+#X text 477 96 MOVEMENT;
+#X obj 283 41 receive mood;
+#X obj 40 45 receive crowd_size;
+#X obj 445 49 receive movement;
+#X obj 274 461 readsf~ 1;
+#X msg 246 400 start;
+#X obj 152 619 dac~ 1 2;
+#X obj 178 559 *~;
+#X obj 149 329 line~;
+#X floatatom 47 194 5 0 0 0 - - -, f 5;
+#X obj 46 385 else/sig2float~;
+#X floatatom 46 406 5 0 0 0 - - -, f 5;
+#X obj 307 290 metro 500;
+#X obj 311 342 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144
+-1 -1;
+#X obj 250 343 t b b;
+#X msg 298 400 open sounds/Deep-Kick.wav;
+#X obj 268 257 loadbang;
+#X floatatom 388 290 5 0 0 0 - - -, f 5;
+#X obj 311 214 expr (1-$f1) * 500 + 300;
+#X msg 118 269 \$1 2000;
+#X connect 0 0 23 0;
+#X connect 2 0 14 0;
+#X connect 6 0 0 0;
+#X connect 7 0 2 0;
+#X connect 8 0 4 0;
+#X connect 9 0 12 1;
+#X connect 10 0 9 0;
+#X connect 12 0 11 0;
+#X connect 12 0 11 1;
+#X connect 13 0 12 0;
+#X connect 13 0 15 0;
+#X connect 14 0 24 0;
+#X connect 15 0 16 0;
+#X connect 17 0 18 0;
+#X connect 17 0 19 0;
+#X connect 19 0 10 0;
+#X connect 19 1 20 0;
+#X connect 20 0 9 0;
+#X connect 21 0 17 0;
+#X connect 23 0 17 1;
+#X connect 23 0 22 0;
+#X connect 24 0 13 0;
