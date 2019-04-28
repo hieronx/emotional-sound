@@ -3,7 +3,7 @@
 <head>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@0.13.0"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
-    <script src="scripts/webpd-latest.min.js"></script>
+    <script src="scripts/webpd-latest.js"></script>
 
     <style>
         #wrapper {
@@ -71,7 +71,7 @@
     var offset_y = 40;
 
     loadModel('models/mobilenetv1_models/model.json')
-    // create model
+
     async function createModel(path) {
         let model_tmp = await tf.loadModel(path)
         return model_tmp
@@ -188,8 +188,10 @@
 
             tensor = tf.cast(tensor, 'float32')
             const offset = tf.scalar(255.0);
+
             // Normalize the image 
             const normalized = tensor.div(offset);
+            
             //We add a dimension to get a batch shape 
             const batched = normalized.expandDims(0)
             return batched
@@ -201,7 +203,7 @@
         return navigator.mediaDevices.getUserMedia({
                 video: {
                     facingMode: 'user',
-                    frameRate: 60
+                    frameRate: 2
                 },
                 audio: false
             })
@@ -220,9 +222,7 @@
         status.innerHTML = "Loading... ";
 
         var ori = document.getElementById("original_video");
-        //        var emo = document.getElementById("emotion_video");
         ori.innerHTML = "Original: "
-        //        emo.innerHTML = "Result : "
         playCameraOnVideo(video)
             .then(() => main(video))
             .catch(handleError)
@@ -238,15 +238,27 @@
     }
 
     function loadAudio() {
-        console.log('retrieving patch')
         let patch = null
+
         fetch('http://localhost:5000/main.pd').then((response) => {
             return response.text()
-        }).then((patchStr) => {
-            console.log('loading patch', patchStr)
-            patch = Pd.loadPatch(patchStr)
-            console.log('loaded patch', patch)
-            Pd.start()
+        }).then((mainPatch) => {
+            fetch('http://localhost:5000/playsound.pd').then((response) => {
+                return response.text()
+            }).then((playsoundPatch) => {
+                fetch('http://localhost:5000/customline.pd').then((response) => {
+                    return response.text()
+                }).then((customlinePatch) => {
+                    Pd.registerAbstraction('playsound', playsoundPatch)
+                    Pd.registerAbstraction('customline', customlinePatch)
+
+                    patch = Pd.loadPatch(mainPatch)
+                    Pd.start()
+
+                    Pd.send('crowd_size', [0])
+                    Pd.send('mood', [0.5])
+                })
+            })
         })
     }
 </script>
