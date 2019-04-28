@@ -75,7 +75,7 @@
 
     var $body = document.querySelector('body');
     var emotion_labels = ["angry", "disgust", "fear", "happy", "sad", "surprise", "neutral"];
-    var emotion_mood_specification = [0.0, 0.2, 0.4, 1.0, 0.5, 0.8, 0.6];
+    var emotion_mood_specification = [0.0, 0.2, 0.1, 1.0, 0.1, 0.8, 0.5];
     var emotion_colors = ["#ff0000", "#00a800", "#ff4fc1", "#ffe100", "#306eff", "#ff9d00", "#7c7c7c"];
     var offset_x = 15;
     var offset_y = 40;
@@ -124,7 +124,7 @@
 
     function createDrawFunction() {
         const faceDetector = new window.FaceDetector({
-            fastMode: true
+            fastMode: false
         })
 
         let isDetectingFaces = false
@@ -184,21 +184,21 @@
             status.innerHTML = faces.length + " people detected";
 
             if (faces.length > 0) {
-                const mood = totalMood / faces.length;
+                const mood = Math.min(Math.max(totalMood / faces.length, 0.1), 1);
 
                 socket.emit('message', {
                     address: "/crowd_size",
                     args: [{
-                        value: Math.min(faces.length, 10) / 10
+                        value: faces.length ? Math.max(Math.min(faces.length, 10) / 10, 0.1) : 0.1
                     }]
-                });
+                })
 
                 socket.emit('message', {
                     address: "/mood",
                     args: [{
-                        value: mood
+                        value: faces.length > 0 ? mood : 0.5
                     }]
-                });
+                })
             }
         }
     }
