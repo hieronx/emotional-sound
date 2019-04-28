@@ -1,0 +1,13 @@
+#N canvas 496 126 958 653 10;
+#X obj 180 130 mrpeach/unpackOSC;
+#X floatatom 180 210 5 0 0 0 - - -, f 5;
+#X floatatom 291 209 5 0 0 0 - - -, f 5;
+#X floatatom 402 210 5 0 0 0 - - -, f 5;
+#X obj 180 178 mrpeach/routeOSC /crowd_size /mood /movement, f 70
+;
+#X obj 181 93 mrpeach/udpreceive 3334;
+#X connect 0 0 4 0;
+#X connect 4 0 1 0;
+#X connect 4 1 2 0;
+#X connect 4 2 3 0;
+#X connect 5 0 0 0;

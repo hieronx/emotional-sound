@@ -3,9 +3,12 @@
 <head>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@0.13.0"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
-    <script src="scripts/webpd-latest.js"></script>
+    <script src="scripts/socket.io.js"></script>
 
     <style>
+        html, body {
+            background: #000;
+        }
         #wrapper {
             text-align: center;
             margin: 10px auto;
@@ -18,8 +21,22 @@
         #output_image {
             width: 550px;
         }
-        .inline {
-            display: inline-block;
+
+        #status {
+            color: #FFF;
+        }
+
+        #video {
+            position: absolute;
+            top: calc(50% - 180px);
+            left: calc(50% - 250px);
+        }
+
+        #canvas {
+            position: absolute;
+            top: calc(50% - 180px);
+            left: calc(50% - 250px);
+            z-index: 2;
         }
     </style>
 </head>
@@ -31,17 +48,10 @@
         </h4>
     </center>
 
-    <button onclick="loadAudio();">Start audio</button>
-
-    <div class="inline">
         <center><span id="original_video"></span></center>
         <video id='video' width="500px"></video>
-    </div>
 
-    <div class="inline">
-        <!--        <center><span id="emotion_video"></span></center>-->
-        <canvas id="canvas" src="" style=" margin-top:10px;" />
-    </div>
+        <canvas id="canvas" src="" />
 </body>
 <script>
     // check using phone or not
@@ -69,6 +79,8 @@
     var emotion_colors = ["#ff0000", "#00a800", "#ff4fc1", "#ffe100", "#306eff", "#ff9d00", "#7c7c7c"];
     var offset_x = 15;
     var offset_y = 40;
+        
+    var socket = io('http://127.0.0.1:8081');
 
     loadModel('models/mobilenetv1_models/model.json')
 
@@ -174,8 +186,19 @@
             if (faces.length > 0) {
                 const mood = totalMood / faces.length;
 
-                Pd.send('crowd_size', [Math.min(faces.length, 10) / 10])
-                Pd.send('mood', [mood])
+                socket.emit('message', {
+                    address: "/crowd_size",
+                    args: [{
+                        value: Math.min(faces.length, 10) / 10
+                    }]
+                });
+
+                socket.emit('message', {
+                    address: "/mood",
+                    args: [{
+                        value: mood
+                    }]
+                });
             }
         }
     }
@@ -192,7 +215,7 @@
             // Normalize the image 
             const normalized = tensor.div(offset);
             
-            //We add a dimension to get a batch shape 
+            // Add a dimension to get a batch shape 
             const batched = normalized.expandDims(0)
             return batched
         })
@@ -221,12 +244,26 @@
         var status = document.getElementById('status');
         status.innerHTML = "Loading... ";
 
-        var ori = document.getElementById("original_video");
-        ori.innerHTML = "Original: "
         playCameraOnVideo(video)
             .then(() => main(video))
             .catch(handleError)
 
+        socket.on('connect', function() {
+            // sends to socket.io server the host/port of oscServer
+            // and oscClient
+            socket.emit('config',
+                {
+                    server: {
+                        port: 3333,
+                        host: '127.0.0.1'
+                    },
+                    client: {
+                        port: 3335,
+                        host: '127.0.0.1'
+                    }
+                }
+            );
+        });
     }
 
 
@@ -235,31 +272,6 @@
         var status = document.getElementById('status');
         model = await createModel(path)
         startVideo();
-    }
-
-    function loadAudio() {
-        let patch = null
-
-        fetch('http://localhost:5000/main.pd').then((response) => {
-            return response.text()
-        }).then((mainPatch) => {
-            fetch('http://localhost:5000/playsound.pd').then((response) => {
-                return response.text()
-            }).then((playsoundPatch) => {
-                fetch('http://localhost:5000/customline.pd').then((response) => {
-                    return response.text()
-                }).then((customlinePatch) => {
-                    Pd.registerAbstraction('playsound', playsoundPatch)
-                    Pd.registerAbstraction('customline', customlinePatch)
-
-                    patch = Pd.loadPatch(mainPatch)
-                    Pd.start()
-
-                    Pd.send('crowd_size', [0])
-                    Pd.send('mood', [0.5])
-                })
-            })
-        })
     }
 </script>
 

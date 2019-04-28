@@ -1,0 +1,9 @@
+{
+    "name": "osc-web",
+    "description": "OSC (Open Sound Control) Web Bridge",
+    "version": "0.2.1",
+    "dependencies": {
+        "node-osc": "^1.1.0",
+        "socket.io": "1.3.x"
+    }
+}
